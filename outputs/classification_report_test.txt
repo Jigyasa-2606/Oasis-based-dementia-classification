@@ -1,0 +1,13 @@
+split=test split_mode=subject
+accuracy=0.738309 balanced_accuracy=0.381415 macro_f1=0.366730 majority_baseline=0.764977
+
+                    precision    recall  f1-score   support
+
+     Mild Dementia     0.1352    0.1544    0.1441       732
+ Moderate Dementia     0.0000    0.0000    0.0000       244
+      Non Demented     0.8969    0.8425    0.8688     10126
+Very mild Dementia     0.3977    0.5288    0.4540      2135
+
+          accuracy                         0.7383     13237
+         macro avg     0.3574    0.3814    0.3667     13237
+      weighted avg     0.7577    0.7383    0.7458     13237

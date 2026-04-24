@@ -1,0 +1,42 @@
+{
+  "class_names": [
+    "Mild Dementia",
+    "Moderate Dementia",
+    "Non Demented",
+    "Very mild Dementia"
+  ],
+  "split_info": {
+    "num_total": 86437,
+    "num_train": 59536,
+    "num_val": 13664,
+    "num_test": 13237,
+    "class_names": [
+      "Mild Dementia",
+      "Moderate Dementia",
+      "Non Demented",
+      "Very mild Dementia"
+    ],
+    "label_map": {
+      "mild dementia": 0,
+      "moderate dementia": 1,
+      "non demented": 2,
+      "very mild dementia": 3
+    },
+    "split_mode": "subject",
+    "split_seed": 42,
+    "train_class_counts": [
+      3599,
+      244,
+      46177,
+      9516
+    ],
+    "num_subjects_total": 347,
+    "num_subjects_train": 242,
+    "num_subjects_val": 52,
+    "num_subjects_test": 53
+  },
+  "best_val_acc": 0.8119145199063232,
+  "test_acc": 0.7383092845810985,
+  "split_mode": "subject",
+  "class_weights": true
+}
