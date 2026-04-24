@@ -4,6 +4,12 @@ Starter pipeline for 4-class dementia stage classification from MRI JPG slices.
 
 **Defaults (honest evaluation):** training splits by **OASIS subject ID** (`--split_mode subject`) so slices from the same patient do not appear in both train and test. Loss uses **inverse-frequency class weights** unless you pass `--no_class_weights`. Evaluation prints **balanced accuracy**, **macro F1**, and a **majority baseline** alongside accuracy.
 
+**Live Demo**
+
+Try the web app: https://web-nine-opal-86.vercel.app
+
+Upload a brain MRI scan and get instant AI-powered classification — runs entirely in your browser, no installation needed.
+
 ## Expected data structure
 
 Point `--data_dir` to a folder containing the 4 class folders:
