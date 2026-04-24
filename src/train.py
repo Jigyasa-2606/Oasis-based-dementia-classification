@@ -4,12 +4,23 @@ import argparse
 import json
 from pathlib import Path
 
+import numpy as np
 import torch
 import torch.nn as nn
 from sklearn.metrics import accuracy_score, classification_report
 from torchvision.models import ResNet18_Weights, resnet18
 
 from dataset import make_stratified_splits
+from device_utils import pick_device
+
+
+def _class_weights_from_counts(counts: list[int], num_classes: int) -> torch.Tensor:
+    c = np.array(counts, dtype=np.float64)
+    c = np.maximum(c, 1.0)
+    n = float(c.sum())
+    w = n / (num_classes * c)
+    w = w / w.mean()
+    return torch.tensor(w, dtype=torch.float32)
 
 
 def train_one_epoch(model, loader, criterion, optimizer, device):
@@ -63,34 +74,58 @@ def main():
     parser.add_argument("--lr", type=float, default=1e-4)
     parser.add_argument("--image_size", type=int, default=224)
     parser.add_argument("--output_dir", type=str, default="outputs")
+    parser.add_argument("--num_workers", type=int, default=0)
     parser.add_argument(
-        "--num_workers",
-        type=int,
-        default=0,
-        help="DataLoader workers. Use 0 on macOS to avoid multiprocessing import issues (recommended).",
+        "--split_mode",
+        type=str,
+        choices=("subject", "slice"),
+        default="subject",
+        help='subject = split by OASIS subject ID (no patient leakage); slice = random image split.',
+    )
+    parser.add_argument(
+        "--no_class_weights",
+        action="store_true",
+        help="Disable inverse-frequency class weights in the loss (default: weights ON).",
     )
     args = parser.parse_args()
 
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = pick_device()
     print(f"Using device: {device}")
+    print(f"Split mode: {args.split_mode}")
 
     train_loader, val_loader, test_loader, split_info = make_stratified_splits(
         data_dir=args.data_dir,
         image_size=args.image_size,
         batch_size=args.batch_size,
         num_workers=args.num_workers,
+        split_mode=args.split_mode,
+        device=device,
     )
     class_names = split_info["class_names"]
     num_classes = len(class_names)
+
+    if split_info.get("num_subjects_total"):
+        print(
+            f"Subjects — total={split_info['num_subjects_total']}, "
+            f"train={split_info['num_subjects_train']}, val={split_info['num_subjects_val']}, "
+            f"test={split_info['num_subjects_test']}"
+        )
 
     model = resnet18(weights=ResNet18_Weights.DEFAULT)
     model.fc = nn.Linear(model.fc.in_features, num_classes)
     model = model.to(device)
 
-    criterion = nn.CrossEntropyLoss()
+    if args.no_class_weights:
+        criterion = nn.CrossEntropyLoss()
+        print("Class weights: off")
+    else:
+        w = _class_weights_from_counts(split_info["train_class_counts"], num_classes).to(device)
+        criterion = nn.CrossEntropyLoss(weight=w)
+        print(f"Class weights (train rebalanced): {w.detach().cpu().numpy().round(4).tolist()}")
+
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
 
     best_val_acc = 0.0
@@ -125,6 +160,8 @@ def main():
         "split_info": split_info,
         "best_val_acc": best_val_acc,
         "test_acc": test_acc,
+        "split_mode": args.split_mode,
+        "class_weights": not args.no_class_weights,
     }
     with (output_dir / "training_artifacts.json").open("w", encoding="utf-8") as f:
         json.dump(artifact, f, indent=2)
@@ -135,6 +172,8 @@ def main():
             "class_names": class_names,
             "image_size": args.image_size,
             "binary_non_demented_class": "non_demented",
+            "split_mode": args.split_mode,
+            "class_weights": not args.no_class_weights,
         },
         output_dir / "model_bundle.pt",
     )

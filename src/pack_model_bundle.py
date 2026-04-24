@@ -26,6 +26,18 @@ def main() -> None:
     )
     parser.add_argument("--image_size", type=int, default=224)
     parser.add_argument("--output", type=str, default="outputs/model_bundle.pt")
+    parser.add_argument(
+        "--split_mode",
+        type=str,
+        choices=("subject", "slice"),
+        default="slice",
+        help="Must match training. Old models = slice; new default training = subject.",
+    )
+    parser.add_argument(
+        "--no_class_weights_in_training",
+        action="store_true",
+        help="Set if the run did not use inverse-frequency class weights (metadata only).",
+    )
     args = parser.parse_args()
 
     weights_path = Path(args.weights).expanduser().resolve()
@@ -51,6 +63,8 @@ def main() -> None:
             "class_names": class_names,
             "image_size": args.image_size,
             "binary_non_demented_class": "non_demented",
+            "split_mode": args.split_mode,
+            "class_weights": not args.no_class_weights_in_training,
         },
         out_path,
     )
