@@ -58,6 +58,23 @@ Artifacts:
 - `outputs/model_bundle.pt`
 - `outputs/training_artifacts.json`
 
+## Pretrained Weights
+
+Download trained weights from Google Drive: [Model Weights Folder](https://drive.google.com/drive/u/1/folders/1ewZNY8pRLysLLCLBFRo8MwJxu5BBvpcE)
+
+Expected files:
+- `best_model.pt`
+- `model_bundle.pt`
+
+Place them in `outputs/`:
+
+```bash
+cp /path/to/downloaded/model_bundle.pt outputs/model_bundle.pt
+cp /path/to/downloaded/best_model.pt outputs/best_model.pt
+```
+
+Then you can run evaluation/prediction directly without retraining.
+
 ## Evaluate
 
 If training finished normally, `outputs/model_bundle.pt` exists. If you **only** have `outputs/best_model.pt`, build the bundle once (class order comes from folder names under `data_dir`, same as training):
